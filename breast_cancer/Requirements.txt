@@ -1,0 +1,19 @@
+Dependencies
+To run these notebooks, you'll need the following Python libraries:
+
+pandas
+
+numpy
+
+matplotlib
+
+seaborn
+
+scikit-learn
+
+imblearn (specifically imbalanced-learn for SMOTE)
+
+joblib
+
+You can install these dependencies using pip: 
+pip install pandas numpy matplotlib seaborn scikit-learn imbalanced-learn joblib
