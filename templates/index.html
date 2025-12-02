@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Breast Cancer Prediction</title>
+    <style>
+        :root {
+            --primary: #2e7d32;
+            --primary-light: #4caf50;
+            --primary-soft: #e8f5e9;
+            --danger: #c62828;
+            --danger-soft: #ffebee;
+            --border: #e0e0e0;
+            --bg: #f5f5f7;
+            --card: #ffffff;
+            --text-main: #333333;
+            --text-muted: #757575;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+            background: var(--bg);
+            color: var(--text-main);
+            padding: 24px 12px;
+        }
+
+        .page {
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+
+        /* Top header bar */
+        .page-header {
+            background: linear-gradient(90deg, #1b5e20, #388e3c);
+            border-radius: 10px;
+            padding: 14px 18px;
+            color: #ffffff;
+            margin-bottom: 18px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .page-header h1 {
+            font-size: 22px;
+            font-weight: 600;
+        }
+
+        .page-header span {
+            font-size: 13px;
+            opacity: 0.9;
+        }
+
+        .tag {
+            font-size: 11px;
+            padding: 4px 10px;
+            border-radius: 999px;
+            border: 1px solid rgba(255, 255, 255, 0.7);
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+        }
+
+        .container {
+            background: var(--card);
+            border-radius: 10px;
+            padding: 20px 22px 24px;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
+            border: 1px solid #e3e3e3;
+        }
+
+        .section {
+            margin-bottom: 26px;
+        }
+
+        .section:last-of-type {
+            margin-bottom: 0;
+        }
+
+        .section-title {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .section-subtitle {
+            font-size: 13px;
+            color: var(--text-muted);
+            margin-bottom: 12px;
+        }
+
+        .divider {
+            height: 1px;
+            background: var(--border);
+            margin: 12px 0 18px;
+        }
+
+        .model-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 16px;
+            align-items: flex-end;
+        }
+
+        .model-selector {
+            flex: 1 1 220px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 6px;
+            color: var(--text-muted);
+            font-weight: 500;
+            font-size: 13px;
+        }
+
+        select,
+        input[type="number"],
+        input[type="file"] {
+            width: 100%;
+            padding: 9px 10px;
+            border-radius: 6px;
+            border: 1px solid #d0d0d0;
+            font-size: 13px;
+            background: #ffffff;
+            transition: border-color 0.15s, box-shadow 0.15s;
+        }
+
+        select:focus,
+        input:focus {
+            outline: none;
+            border-color: var(--primary-light);
+            box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.2);
+        }
+
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+            gap: 12px;
+            margin-top: 10px;
+            margin-bottom: 14px;
+        }
+
+        .feature-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .feature-group label {
+            margin-bottom: 4px;
+        }
+
+        .buttons-line {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        button {
+            background: var(--primary);
+            color: #ffffff;
+            border: none;
+            padding: 9px 20px;
+            border-radius: 999px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 600;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            transition: background 0.15s, transform 0.05s, box-shadow 0.15s;
+            box-shadow: 0 3px 8px rgba(27, 94, 32, 0.35);
+        }
+
+        button:hover {
+            background: var(--primary-light);
+        }
+
+        button:active {
+            transform: translateY(1px);
+            box-shadow: 0 1px 4px rgba(27, 94, 32, 0.25);
+        }
+
+        button:disabled {
+            background: #bdbdbd;
+            box-shadow: none;
+            cursor: not-allowed;
+        }
+
+        .loading {
+            display: none;
+            color: var(--text-muted);
+            font-style: italic;
+            font-size: 12px;
+        }
+
+        .result {
+            margin-top: 14px;
+            padding: 12px 14px;
+            border-radius: 7px;
+            display: none;
+            border: 1px solid transparent;
+            font-size: 13px;
+        }
+
+        .result-title {
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .result.success {
+            background: var(--primary-soft);
+            border-color: #c8e6c9;
+            color: #1b5e20;
+        }
+
+        .result.error {
+            background: var(--danger-soft);
+            border-color: #ffcdd2;
+            color: var(--danger);
+        }
+
+        .pill {
+            display: inline-block;
+            padding: 5px 10px;
+            border-radius: 999px;
+            font-weight: 600;
+            font-size: 13px;
+        }
+
+        .pill-benign {
+            background: #e8f5e9;
+            color: #1b5e20;
+        }
+
+        .pill-malignant {
+            background: #ffebee;
+            color: #b71c1c;
+        }
+
+        .csv-box {
+            background: #fafafa;
+            border-radius: 8px;
+            padding: 14px 14px 16px;
+            border: 1px dashed #cfcfcf;
+        }
+
+        .csv-results {
+            margin-top: 16px;
+            max-height: 360px;
+            overflow-y: auto;
+            border-radius: 8px;
+            border: 1px solid #e0e0e0;
+            background: #ffffff;
+        }
+
+        /* New: summary under the table, not inside the scroll */
+        .csv-summary {
+            margin-top: 10px;
+            font-size: 13px;
+            padding: 10px 12px;
+            border-radius: 7px;
+            background: #fafafa;
+            border: 1px solid #e0e0e0;
+            display: none;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+
+        thead {
+            position: sticky;
+            top: 0;
+            background: #fafafa;
+            z-index: 1;
+        }
+
+        th, td {
+            padding: 8px 10px;
+            border-bottom: 1px solid #eeeeee;
+            text-align: left;
+        }
+
+        th {
+            font-weight: 600;
+            color: #616161;
+        }
+
+        tbody tr:nth-child(even) {
+            background: #fbfbfb;
+        }
+
+        .benign {
+            color: #2e7d32;
+            font-weight: 600;
+        }
+
+        .malignant {
+            color: #c62828;
+            font-weight: 600;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 16px 14px 20px;
+            }
+
+            .page-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 6px;
+            }
+
+            .feature-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="page">
+
+        <div class="page-header">
+            <div>
+                <h1>Breast Cancer Prediction</h1>
+                <span>Wisconsin Breast Cancer Diagnostic (WBCD)</span>
+            </div>
+            <div class="tag">Machine learning model</div>
+        </div>
+
+        <div class="container">
+            <!-- Model selection -->
+            <div class="section">
+                <div class="section-title">Model selection</div>
+                <p class="section-subtitle">
+                    Choose which trained model to use for predictions.
+                </p>
+                <div class="model-row">
+                    <div class="model-selector">
+                        <label for="model">Model</label>
+                        <select id="model" name="model">
+                            {% for model in models %}
+                            <option value="{{ model }}">{{ model.upper() }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                <div class="divider"></div>
+            </div>
+
+            <!-- Manual prediction -->
+            <div class="section">
+                <div class="section-title">Manual prediction</div>
+                <p class="section-subtitle">
+                    Enter the 30 WBCD feature values for a single patient to generate a prediction.
+                </p>
+
+                <form id="predictionForm">
+                    <div class="feature-grid">
+                        {% for feature in features %}
+                        <div class="feature-group">
+                            <label for="{{ feature }}">{{ feature }}</label>
+                            <input type="number" step="any" id="{{ feature }}" name="{{ feature }}" required>
+                        </div>
+                        {% endfor %}
+                    </div>
+
+                    <div class="buttons-line">
+                        <button type="submit">Predict</button>
+                        <div class="loading" id="loading">Predicting…</div>
+                    </div>
+                </form>
+
+                <div class="result" id="result"></div>
+            </div>
+
+            <!-- CSV prediction -->
+            <div class="section">
+                <div class="section-title">CSV batch prediction</div>
+                <p class="section-subtitle">
+                    Upload a CSV file with exactly 30 columns (all WBCD features). Each row will receive a prediction.
+                </p>
+
+                <div class="csv-box">
+                    <form id="csvForm">
+                        <div class="file-input-wrapper">
+                            <label for="csvFile">CSV file</label>
+                            <input type="file" id="csvFile" name="file" accept=".csv" required>
+                        </div>
+                        <div class="buttons-line" style="margin-top: 12px;">
+                            <button type="submit">Predict from CSV</button>
+                            <div class="loading" id="csvLoading">Processing…</div>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="result" id="csvResult"></div>
+                <div class="csv-results" id="csvResults"></div>
+                <!-- New: summary outside scrollable table -->
+                <div id="csvSummary" class="csv-summary"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Manual prediction
+        document.getElementById('predictionForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const loading = document.getElementById('loading');
+            const result = document.getElementById('result');
+            const button = e.target.querySelector('button');
+
+            loading.style.display = 'block';
+            result.style.display = 'none';
+            button.disabled = true;
+
+            const formData = new FormData(e.target);
+            formData.append('model', document.getElementById('model').value);
+
+            try {
+                const response = await fetch('/predict', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    const isMalignant = data.prediction === 1 || /Malignant/i.test(data.result);
+                    const pillClass = isMalignant ? 'pill-malignant' : 'pill-benign';
+
+                    result.className = 'result success';
+                    result.innerHTML = `
+                        <div class="result-title">Prediction result</div>
+                        <div style="margin-top: 4px;">
+                            <span class="pill ${pillClass}">${data.result}</span>
+                        </div>
+                    `;
+                } else {
+                    result.className = 'result error';
+                    result.innerHTML = `
+                        <div class="result-title">Error</div>
+                        <div>${data.error}</div>
+                    `;
+                }
+                result.style.display = 'block';
+            } catch (error) {
+                result.className = 'result error';
+                result.innerHTML = `
+                    <div class="result-title">Error</div>
+                    <div>${error.message}</div>
+                `;
+                result.style.display = 'block';
+            } finally {
+                loading.style.display = 'none';
+                button.disabled = false;
+            }
+        });
+
+        // CSV prediction
+        document.getElementById('csvForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const loading = document.getElementById('csvLoading');
+            const result = document.getElementById('csvResult');
+            const resultsDiv = document.getElementById('csvResults');
+            const summaryDiv = document.getElementById('csvSummary');
+            const button = e.target.querySelector('button');
+
+            loading.style.display = 'block';
+            result.style.display = 'none';
+            resultsDiv.innerHTML = '';
+            summaryDiv.innerHTML = '';
+            summaryDiv.style.display = 'none';
+            button.disabled = true;
+
+            const formData = new FormData(e.target);
+            formData.append('model', document.getElementById('model').value);
+
+            try {
+                const response = await fetch('/predict_csv', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    result.className = 'result success';
+                    result.innerHTML = `
+                        <div class="result-title">CSV processed successfully</div>
+                        <div>Total predictions: <strong>${data.total}</strong></div>
+                    `;
+                    result.style.display = 'block';
+
+                    let tableHTML = `
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Row</th>
+                                    <th>Prediction</th>
+                                    <th>Result</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                    `;
+
+                    data.predictions.forEach(pred => {
+                        const resultClass = pred.prediction === 0 ? 'benign' : 'malignant';
+                        tableHTML += `
+                            <tr>
+                                <td>${pred.row}</td>
+                                <td>${pred.prediction}</td>
+                                <td class="${resultClass}">${pred.result}</td>
+                            </tr>
+                        `;
+                    });
+
+                    tableHTML += `
+                            </tbody>
+                        </table>
+                    `;
+
+                    resultsDiv.innerHTML = tableHTML;
+
+                    // ✅ Summary OUTSIDE scroll area
+                    const malignantCount = data.predictions.filter(p => p.prediction === 1).length;
+                    const benignCount = data.predictions.filter(p => p.prediction === 0).length;
+
+                    summaryDiv.innerHTML = `
+                        <strong>Summary:</strong>
+                        <div style="margin-top: 4px;">
+                            <span style="color:#c62828; font-weight:600; margin-right:12px;">
+                                Malignant: ${malignantCount}
+                            </span>
+                            <span style="color:#2e7d32; font-weight:600;">
+                                Benign: ${benignCount}
+                            </span>
+                        </div>
+                    `;
+                    summaryDiv.style.display = 'block';
+                } else {
+                    result.className = 'result error';
+                    result.innerHTML = `
+                        <div class="result-title">Error</div>
+                        <div>${data.error}</div>
+                    `;
+                    result.style.display = 'block';
+                }
+            } catch (error) {
+                result.className = 'result error';
+                result.innerHTML = `
+                    <div class="result-title">Error</div>
+                    <div>${error.message}</div>
+                `;
+                result.style.display = 'block';
+            } finally {
+                loading.style.display = 'none';
+                button.disabled = false;
+            }
+        });
+    </script>
+</body>
+</html>
